@@ -8,7 +8,7 @@ size: 16:9
 Deep Metric Learning
 ===
 
-###### Computer Vision Master, module M5, course 2020-21
+###### Computer Vision Master, module M5, course 2021-22
 
 ###### Joan Serrat
 
@@ -31,7 +31,8 @@ Contents
 1$.$ What is and why
 ===
 
-![width:1300](figures/similar1.jpeg)
+![width:1000](figures/similar1.jpeg)
+![width:1000](figures/ranma2.jpeg)
 
 ---
 
@@ -44,11 +45,13 @@ Satisfies
 - $f(x,y) = f(y,x)$
 - $f(x,z) \leq f(x,y) + f(y,z)$
 
-Example : Euclidean distance $||x-y||^2_2$ 
+Example : 
+- Euclidean distance $||x-y||^2_2$
+- Mahalanobis distance $(x-\mu)^t \Sigma^{-1} (x-\mu)$
 
 ---
 
-We'll be more interested in distances **learnable** from data, like Mahalanobis distance $((x-y)^\intercal \, \Sigma^{-1} \, (x-y))^{1/2}$ in order to **impose our own notion of similarity**
+Mahalanobis: 2d Gaussian samples with non-diagonal $\Sigma_1=\Sigma_2$, $\mu_1\neq\mu_2$
 
 <center><img src="figures/qda.png" height="500"></center>
 <!-- 
@@ -56,15 +59,13 @@ We'll be more interested in distances **learnable** from data, like Mahalanobis 
 <center><img src="figures/mahalanobis1.png" height="500"></center>
 -->
 
-2d Gaussian samples with non-diagonal $\Sigma_1=\Sigma_2$, $\mu_1\neq\mu_2$
-
 ---
 
-Incidentally, how to find such a $\Sigma$ ?
+We'll be more interested in distances **learnable** from data, like $(x-y)^\intercal \, A \, (x-y)$ in order to **impose our own notion of similarity**
 
 Let **$S$** set of pairs of samples considered **similar** (e.g same class) and **$D$** set of **dissimilar** pairs. 
 
-Optimize
+It is possible to optimize
 
 $\Sigma^{-1} = {\arg \min}_A\;\; \displaystyle\sum_{x_i,x_j \in S}(x_i-x_j)^\intercal \, A \, (x_i-x_j)$
 
@@ -363,6 +364,8 @@ $$L = \max \{\, 0, \; 1 - \frac{d(a,n)}{m + d(a,p)} \, \}$$
 
 ---
 
+# Other losses
+
 ## NCA loss$^1$
 
 Not the most popular but simple and specially adapted to retrieval and classification by $k$-nearest neighbors.
@@ -411,7 +414,82 @@ probability that nearest neighbour of $x_i$ is of its same class = probability $
 
 ---
 
-## Other losses
+## Normalized softmax losses
+
+Cross-entropy is the preferred loss for classification
+
+- batch $(x_i, y_i), \; i=1\ldots m$, $m=$ batch size
+- $x_i$ image
+- $y_i \in [1 \ldots n]$, groundtruth label, with $n=$ number of classes
+- $f(x)$ logits or betwork output before last fully connected layer
+- fc layer is $W^t f(x) + b$
+
+$$
+L_{xe} = - \displaystyle\frac{1}{m} \displaystyle\sum_{i=1}^m \text{one-hot}(y_i) \;\; \log \; \text{softmax}\;f(x_i) \\
+= - \displaystyle\frac{1}{m} \displaystyle\sum_{i=1}^m \log \displaystyle\frac{e^{W_{y_i}^t f(x_i) + b_{y_i}}}{\sum_{j=1}^n e^{W_{y_j}^t f(x_i) + b_{y_j}}}
+$$
+
+![bg right:30% height:300px](fc.png)
+
+---
+
+### Key idea
+- by slightly transforming cross-entropy we can, in addition to perform classification, **learn an embedding**
+- **typical classification** by $\underset{n}{\arg \max} f(x)$ is equivalent to **minimize a distance** to class "centers" in a certain embedding space
+
+A series of papers use this idea to perform face recognition and verification:
+
+Verification: given two faces *of never seen persons*, do they belong to the same person?
+
+Need to compute a simmilarity or distance between pairs of images.
+
+---
+
+### How ?
+
+- in the fc layer, set the bias to zero, $b_j = 0, j=1\ldots n$
+- normalize (L2) the logits $f(x) \rightarrow \tilde{f}(x)$ such that $||\tilde{f}(x)||_2$ = 1
+- also normalize the columns of $W$, $||\tilde{W^t_j}||_2 = 1$
+- then $\tilde{W^t_j} \tilde{f}(x) = 1 \cdot 1 \cdot \cos \theta$, **cosine similarity**
+- maximizie the cosine similarity $=$ minimize the **Euclidean distance** between unitary vectors: $||u - v||_2^2 = 2 - 2 u^t v = 2 - \cos \theta_{u,v}$
+- to minimize
+$$
+L = - \displaystyle\frac{1}{m} \displaystyle\sum_{i=1}^m \log \displaystyle\frac{e^{W_{y_i}^t f(x_i)}}{\sum_{j=1}^n e^{W_{y_j}^t f(x_i)}}
+$$
+means every $f(x_i)$ close to its $W_{y_i}^t$, that becomes the **"center" or representative** of the class $y_i \in [1\ldots n]$
+
+---
+
+|   |   |
+|:--|:--|
+| *NormFace: L2 Hypersphere<br> Embedding for Face Verification*. | ![](figures/norm_face.png) |
+| *SphereFace: Deep Hypersphere <br> Embedding for Face Recognition*. | ![](figures/sphere_face.png) |
+| *CosFace: Large Margin Cosine <br>Loss for Deep Face Recognition*. | ![](figures/cos_face.png)|
+| *ArcFace: Additive Angular Margin<br>Loss for Deep Face Recognition*. | ![](figures/arc_face.png) |
+
+All 2017-18. In practice they need a scale $s$ for the loss to converge.
+
+---
+
+CosFace: effect of margin $m$. Top $f(x)$, bottom embedding $\tilde{f}(x)$
+
+![](figures/toy_cos_face.png)
+
+---
+
+![bg height:600px right:50%](figures/close_open_face.png)
+
+Application: face recognition and verification.
+
+Close : new images of known classes at test time
+
+**Open** : **new classes** at test time.
+
+Open is possible becase they have learned an embedding = a similarity measure, a distance to compare things.
+
+---
+
+## *Still* other losses
 
 Many other losses proposed along the past years: see a long list here [Pytorch Metric Learning losses](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/)
 
@@ -578,7 +656,7 @@ Why not create **pairs of embeddings** ? $\rightarrow$ much more terms at zero c
 
 - pass through the branch a **batch of $n$ images** $x_{k},\, k=1\ldots n$, being $c_{k}$ their classes
 - take the $n$ embeddings $f(x_k)$ and **make all pairs** $\big( f(x_i), f(x_j), y_{ij} \big)$ for $i=1\ldots n, j > i$, with $y_{ij} = 1$ if $c_i \neq c_j$ and 0 else
-- now we have <font color="blue">$n^2(n-1)/2\;$ total terms</font> to minimize the contrastive loss
+- now we have <font color="blue">$n(n-1)/2\;$ total terms</font> to minimize the contrastive loss
 
 ---
 
