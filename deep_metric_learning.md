@@ -429,7 +429,7 @@ L_{xe} = - \displaystyle\frac{1}{m} \displaystyle\sum_{i=1}^m \text{one-hot}(y_i
 = - \displaystyle\frac{1}{m} \displaystyle\sum_{i=1}^m \log \displaystyle\frac{e^{W_{y_i}^t f(x_i) + b_{y_i}}}{\sum_{j=1}^n e^{W_{y_j}^t f(x_i) + b_{y_j}}}
 $$
 
-![bg right:30% height:300px](fc.png)
+![bg right:30% height:350px](figures/fc.png)
 
 ---
 
