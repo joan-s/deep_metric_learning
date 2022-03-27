@@ -1737,6 +1737,8 @@ Sample exam questions
 
 <!-- backgroundColor: beige -->
 
+---
+
 Q1. Consider a Siamese network implemented as two identical branches with shared weights. Let be
 
 - $f(x)$ the $d$-dimensional vector produced by a branch of the network
