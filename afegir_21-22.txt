@@ -1,4 +1,0 @@
-- parlar mes de la PML ?
-- exercici amb PML, fer-lo abans! de InShop o tsinghua o algo facil
-- com visualitzar l'embedding : t-SNE, PCA a scikit-learn i tensorboard, UMAP a PML i independent https://umap-learn.readthedocs.io/
-- comparacio t-SNE, umap https://towardsdatascience.com/how-exactly-umap-works-13e3040e1668

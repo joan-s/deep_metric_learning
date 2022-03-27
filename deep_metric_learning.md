@@ -23,6 +23,7 @@ Contents
 1. Architectures and loss functions
 1. Implementation
 1. Mining
+1. Embedding visualization
 1. Applications : image retrieval, face verification, re-id, few-shot learning, patch correspondence, tracking
 1. I want to try
 
@@ -80,6 +81,8 @@ and $A \succeq 0$ (semidefinite positive : $x^\intercal A x \geq 0, \; \forall x
 Being able to compare two things, i.e. measure their degree of similarity is **ubiquitous**
 
 - **classification** : distance between samples and class prototypes for nearest class mean, or $k$-nearest neighbors
+    - regular classification : what is $x$ ?
+    - distance-based classification : what is $x$ *like* ?
 - **image retrieval** : obtain the $k$ most similar images in the *gallery* to a *query* image
 - **tracking** : get the most similar bounding box to a target's bbox in previous frame
 - **stereo** : find corresponding patch in $I_{left}$ to a patch in $I_{right}$ as the most similar
@@ -451,12 +454,12 @@ Need to compute a simmilarity or distance between pairs of images.
 - normalize (L2) the logits $f(x) \rightarrow \tilde{f}(x)$ such that $||\tilde{f}(x)||_2$ = 1
 - also normalize the columns of $W$, $||\tilde{W^t_j}||_2 = 1$
 - then $\tilde{W^t_j} \tilde{f}(x) = 1 \cdot 1 \cdot \cos \theta$, **cosine similarity**
-- maximizie the cosine similarity $=$ minimize the **Euclidean distance** between unitary vectors: $||u - v||_2^2 = 2 - 2 u^t v = 2 - \cos \theta_{u,v}$
+- for unitary vectors $u, v$, maximize the cosine similarity $=$ minimize their **Euclidean distance** : $||u - v||_2^2 = 2 - 2 u^t v = 2 - \cos \theta_{u,v}$
 - to minimize
 $$
-L = - \displaystyle\frac{1}{m} \displaystyle\sum_{i=1}^m \log \displaystyle\frac{e^{W_{y_i}^t f(x_i)}}{\sum_{j=1}^n e^{W_{y_j}^t f(x_i)}}
+L = - \displaystyle\frac{1}{m} \displaystyle\sum_{i=1}^m \log \displaystyle\frac{e^{\tilde{W}_{y_i}^t \tilde{f}(x_i)}}{\sum_{j=1}^n e^{\tilde{W}_{y_j}^t \tilde{f}(x_i)}}
 $$
-means every $f(x_i)$ close to its $W_{y_i}^t$, that becomes the **"center" or representative** of the class $y_i \in [1\ldots n]$
+means to make every $\tilde{f}(x_i)$ close to its $\tilde{W}_{y_i}^t$, that becomes the **"center" or representative** of the class $y_i \in [1\ldots n]$
 
 ---
 
@@ -467,11 +470,11 @@ means every $f(x_i)$ close to its $W_{y_i}^t$, that becomes the **"center" or re
 | *CosFace: Large Margin Cosine <br>Loss for Deep Face Recognition*. | ![](figures/cos_face.png)|
 | *ArcFace: Additive Angular Margin<br>Loss for Deep Face Recognition*. | ![](figures/arc_face.png) |
 
-All 2017-18. In practice they need a scale $s$ for the loss to converge.
+All 2017-18. They need a scale $s \gg 1$ to make the gradients larger so that the loss converges.
 
 ---
 
-CosFace: effect of margin $m$. Top $f(x)$, bottom embedding $\tilde{f}(x)$
+CosFace: effect of margin $m$ on MNIST. Top $f(x)$, bottom embedding $\tilde{f}(x)$
 
 ![](figures/toy_cos_face.png)
 
@@ -481,7 +484,7 @@ CosFace: effect of margin $m$. Top $f(x)$, bottom embedding $\tilde{f}(x)$
 
 Application: face recognition and verification.
 
-Close : new images of known classes at test time
+Closed classification : new images of known classes at test time
 
 **Open** : **new classes** at test time.
 
@@ -497,7 +500,7 @@ What's the best loss ? More on this later...
 
 ---
 
-4$.$ Simple implementation in Pytorch
+3$.$ Simple implementation in Pytorch
 ===
 
 ![bg right:50%](figures/oop7.jpeg)
@@ -768,7 +771,7 @@ Same goes for **triplet loss** : from a batch of $3n$ images you can get $6n^2 -
 
 ---
 
-3$.$ Mining
+4$.$ Mining
 ===
 
 ![bg right:50% height:600](figures/mining1.jpeg)
@@ -1111,7 +1114,91 @@ Same for **Precision@1**
 
 ---
 
-5$.$ Applications
+5$.$ Embedding visualization
+===
+
+---
+
+You have trained a network to learn an embedding, a space where similar samples are close and far from dissimilar samples.
+
+But **how good is the embedding, *qualitatively*** ? How are the classes spread on it ? **You want to *visualize* the embedding = view your *test* samples on it**. 
+
+Obvious problem: embedding is a high-dimensional space, $d\gg3$ surely.
+
+Solution: low-dimensional projection with PCA ?
+
+PCA looks for the rotation that concentrates variance (variability) along a few axes and then you can select the 2 or 3 axes with the highest variance.
+
+It turns out that high variance is not the best way to perform dimensionality reduction. **Best means to preserve relative distances when projecting**
+
+---
+
+## t-SNE
+
+Classically ([paper](https://www.jmlr.org/papers/volume9/vandermaaten08a/vandermaaten08a.pdf) published in 2008), t-SNE has been a much used tool / algorithm for high-dimensional embedding projection, for visualization purposes *only*.
+
+<br>
+
+> t-SNE is capable of capturing much of the local structure of the high-dimensional data very well while also revealing global structure such as the presence of clusters at several scales.
+
+<br>
+
+**Goal** : given a set of points $x_i \in \R^D$, convert them to $y_i \in \R^d, d \ll D$ *keeping as much as possible the distance relationships in the high-dimensional space*
+
+---
+
+
+
+**How does it work ?** In a nutshell$^1$,
+
+1. convert distances in high-dim space to probabilities
+![](figures/eq1_t-sne.png)
+$p_{j|i}$ means the probability that $x_i$ would choose $x_j$ as its neighbor if neighbors were picked in proportion to their probability under a Gaussian centered at  $x_i$
+1. the value of $\sigma_i$ is the dispersion of neighbors and approximated by
+![](figures/eq2_t-sne.png)
+
+$^1$ [How exactly UMAP works and why exactly it is better than t-SNE](https://towardsdatascience.com/how-exactly-umap-works-13e3040e1668) by N. Oskolkov
+
+---
+
+3. $q_{j|i}, \, y_i, \, y_j$ are the low-dimensional counterparts of $p_{j|i}, \, x_i, \, x_j$ and define $q_{j|i}$ as
+![](figures/eq3bis_t-sne.png)
+but this has problems on crowded regions so authors change it by another distribution (no exponentials :) )
+ ![](figures/eq3_t-sne.png)
+
+4. If the $y_i, \, y_j$ model well the distances of $x_i, \, x_j \; \forall i,j$ in the high-dimensional space then $p_{j|i}$ and $q_{j|i}$ should be *similar*.
+ ![](figures/eq4_t-sne.png)
+ KL = Kullback-Leibler *divergence* $\neq$ distance, between 2 distributions, not simmetric. But can be minimized iteratively to find the $y_i$'s
+
+
+---
+
+## UMAP
+
+t-SNE has been superseded by UMAP. One key difference: t-SNE keeps local structure well but not so much global structure
+
+![height:360](figures/t-sne_problem.png)
+
+Read the post *How exactly...*. Apparently different, it bears several similarities with it. Complete explanation is out of scope. By the same author, read this post : [How to program UMAP from scratch](https://towardsdatascience.com/how-to-program-umap-from-scratch-e6eff67f55fe)
+
+---
+
+### How to run t-SNE and UMAP ?
+
+- Scikit-learn has [t-SNE  + usage examples](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html) (and PCA)
+- install U-MAP with ``conda`` or ``pip``, [read the docs](https://umap-learn.readthedocs.io/en/latest/)
+- both already included in Tensorboard
+- **simplest** but slow : upload your data to https://projector.tensorflow.org/
+
+### Cool demos
+
+From the UMAP [documentation](https://umap-learn.readthedocs.io/en/latest/interactive_viz.html) you can interactively explore already computed embeddings of
+- [MNIST](https://grantcuster.github.io/umap-explorer/)
+- [Fashion MNIST](https://observablehq.com/@stwind/exploring-fashion-mnist/)
+
+---
+
+6$.$ Applications
 ===
 
 <!--
@@ -1206,7 +1293,10 @@ On a test set of 10K pairs
 ### <font color="blue">Embedding</font>
 
 256 dimensions projected to 2D with t-SNE
-http://www.cs.cornell.edu/~sbell/siggraph2015-embedding.html cool!
+<!-- 
+ja no funciona, carrega pero no es veu res
+http://www.cs.cornell.edu/~sbell/siggraph2015-embedding.html cool! 
+-->
 
 ---
 
@@ -1604,7 +1694,7 @@ Tracking **one arbitrary object** in a video, where the object is identified sol
 
 ---
 
-6$.$ I want to try
+7$.$ I want to try
 ===
 
 ![bg right:50% width:600](figures/experiment.jpeg)
@@ -1629,7 +1719,7 @@ I have time to learn
 
 ---
 
-7$.$ Wrap up
+Wrap up
 ===
 
 - Siamese and triplets are useful for **learning semantic similarity descriptors**
@@ -1639,3 +1729,93 @@ I have time to learn
 - **Versatile** tool : define your own loss function, architecture, miner ...
 - In practice, **mining matters** to training time and results
 - Active field in deep learning that you should know
+
+---
+
+Sample exam questions
+===
+
+<!-- backgroundColor: beige -->
+
+Q1. Consider a Siamese network implemented as two identical branches with shared weights. Let be
+
+- $f(x)$ the $d$-dimensional vector produced by a branch of the network
+- $x_1, x_2$ inputs to branches
+- $D = ||f(x_1) - f(x_2)||_2$
+- $y=0$ if $x_1$ is considered similar to $x_2$ and 1 if not
+- $m$ a certain given value
+
+a) What is the meaning of the following loss ? Explain it. How is it called ? 
+$$L(x_1, x_2, y) = (1-y) \; D^2 + y\; (\max\, (0, m - D))^2$$
+b) Draw a figure showing cases $(L>0, y=0)$, $(L>0, y=1)$, $(L=0, y=1)$
+
+---
+
+Answer
+
+a) Contrastive loss. 
+
+If $x_1$ and $x_2$ are considered similar (for instance, belong to the same class) then the loss is the squared Euclidean distance of their representation: the more apart they are, the higher the loss, so this loss tends to pull together samples which are considered similar. 
+
+If $x_1$ and $x_2$ are dissimilar and Euclidean distance of represetations is less than $m$, the margin, then the loss is the positive difference between the margin and the distance. If distance is larger than the margin the loss is zero. Therefore this loss pushes away pairs of samples of different class.
+
+---
+
+b) 
+
+![height:600](figures/contrastive.png)
+
+---
+
+Q2. Consider again a Siamese network made of two branches with shared weights. For a minibatch of $n$ samples we obtain $n/2$ pairs, being each one either positive or negative ($y=0$ or 1). Each pair is one term of the loss. Is there a way to obtain more pairs from the same minibatch ? How ? Why is it better to do it this way ?
+
+---
+
+Answer
+
+Instead of two branches we have just one. Pairs are made in the embedding space :
+
+1. process all the $n$ samples (pass them through the network) to obtain $f(x_1) \ldots f(x_n)$ 
+2. make *all* the possible pairs of transformed samples, $n(n-1)/2$ pairs in total
+
+Each pair is a term of the loss. More terms is better, in principle, to estimate the gradient. This is called *online contrastive loss*.
+
+---
+
+Q3. What is a hard positive for a Siamese network with contrastive loss ? And a hard negative ?
+
+---
+
+Answer
+
+Hard positive is a pair of representations $(f(x_1), f(x_2))$ which are far way (or farther than other positive pairs) and $x_1, x_2$ belong to the same class or are similar according to the groundtruth.
+
+A hard negative is the opposite: $f(x_1), f(x_2)$ are close (or closer than other positive pairs) and $x_1, x_2$ belong to different classes.
+
+---
+
+Q4. To train a Siamese network suppose we draw a batch of pairs and denote by $P$ and $N$ the set of similar (positive) and dissimilar (negative) pairs, respectively. Interpret the following loss :
+
+$$J = \displaystyle\sum_{(i,j) \in P} \max \,(0, J_{ij})\\
+J_{ij} = \max \Big( 
+\max_{(i,k) \, \in \, N} (m - d_{ik}), 
+\max_{(j,l) \, \in \, N} (m - d_{jl}) \,
+\Big) + d_{ij}
+$$
+
+Why do it like this, instead of simply optimize the regular contrastive loss ?
+What are we trying to do in this particular case (meaning of the inner and outer $\max$ terms) ?
+
+---
+
+Answer 
+
+We are doing mining. That is, looking for difficult samples to train, because this tends to yield better results (convergence to better minima), and/or faster convergence.
+
+The way to do it in this case is to maximize the distance to hardest negative wrt $f(x_i)$ and hardest negative wrt $f(x_j)$ and at the same time minimize distance between positives  $f(x_i), f(x_j)$.
+
+
+
+
+
+
