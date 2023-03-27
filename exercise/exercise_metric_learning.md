@@ -28,8 +28,8 @@ Learning goals
 Dataset: Tsinghua Tencent 100K 
 ===
 
-- 100K images "in hte wild" of +170 classes of traffic signs in China
-- original dataset description [here]((https://cg.cs.tsinghua.edu.cn/traffic-sign/))
+- 100K images "in the wild" of +170 classes of traffic signs in China
+- original dataset description [here](https://cg.cs.tsinghua.edu.cn/traffic-sign/)
 - do not download it, but use [our pre-processed version](https://cvcuab-my.sharepoint.com/:u:/g/personal/joans_cvc_uab_cat/EbZHRZYwvJdOhKqVmkTqUpEBns5UePHUDnR1i_pVpgin5w?e=BLKhrg) of the dataset:
     - 81 classes with +20 samples
     - cropped and resized to 64 $\times$ 64 

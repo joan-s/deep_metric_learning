@@ -8,7 +8,7 @@ size: 16:9
 Deep Metric Learning
 ===
 
-###### Computer Vision Master, module M5, course 2021-22
+###### Computer Vision Master, module M5, course 2022-23
 
 ###### Joan Serrat
 
@@ -68,11 +68,11 @@ Let **$S$** set of pairs of samples considered **similar** (e.g same class) and 
 
 It is possible to optimize
 
-$\Sigma^{-1} = {\arg \min}_A\;\; \displaystyle\sum_{x_i,x_j \in S}(x_i-x_j)^\intercal \, A \, (x_i-x_j)$
+$$\Sigma^{-1} = {\arg \min}_A\;\; \displaystyle\sum_{x_i,x_j \in S}(x_i-x_j)^\intercal \, A \, (x_i-x_j)$$
 
-subject to $\displaystyle\sum_{x_i,x_j \in D}(x_i-x_j)^\intercal \, A \, (x_i-x_j) \geq 1$
-
-and $A \succeq 0$ (semidefinite positive : $x^\intercal A x \geq 0, \; \forall x$)
+subject to 
+$$\displaystyle\sum_{x_i,x_j \in D}(x_i-x_j)^\intercal \, A \, (x_i-x_j) \geq 1\\
+x^\intercal A x \geq 0, \; \forall x \;\; (\text{semidefinite positive})$$
 
 ---
 
@@ -96,7 +96,7 @@ plus several other tasks we will show in the applications part
 ## Why learn a *deep* metric ?
 
 - like in traditional classification, detection, semantic segmentation ... in classic metric learning, metrics were learned from **handcrafted features $\Rightarrow$ subobtimal**
-- in deep learning **features are learned**
+- in deep learning **features = sample *representations*, are learned**
     - transform the represention of an object to a new representation
     - in an **embedding space**, with less dimensions
     - such that objects we say are similar, will be close, and different will be far
@@ -110,15 +110,22 @@ plus several other tasks we will show in the applications part
 
 Figures from https://github.com/adambielski/siamese-triplet
 
-CNN conv 5x5x32 $\rightarrow$ PReLU $\rightarrow$ MaxPool 2x2 $\rightarrow$ conv 5x5x64 $\rightarrow$ PReLU $\rightarrow$ MaxPool 2x2 $\rightarrow$ Dense 256 $\rightarrow$ PReLU $\rightarrow$ Dense 256 $\rightarrow$ PReLU $\rightarrow$ **Dense 2** $\rightarrow$ PReLU $\rightarrow$ Dense 10 $\rightarrow$ Softmax, Cross-entropy
+CNN ``conv 5x5x32`` $\rightarrow$ ``PReLU`` $\rightarrow$ ``MaxPool 2x2`` $\rightarrow$ ``conv 5x5x64`` $\rightarrow$ ``PReLU`` $\rightarrow$ ``MaxPool 2x2`` $\rightarrow$ ``Linear 256`` $\rightarrow$ ``PReLU`` $\rightarrow$ ``Linear 256`` $\rightarrow$ ``PReLU`` $\rightarrow$ **``Linear 2``** $\rightarrow$ ``PReLU`` $\rightarrow$ ``Linear 10`` $\rightarrow$ ``Softmax``, ``Cross-entropy``
+
+Why **``Linear 2``** ? To *view* how samples are represented in the embedding space
 
 ---
 
-| Cross entropy, Dense 2 | Metric learning train | test |
+| Cross entropy<br> train set | Contrastive loss<br> train set | Contrastive loss<br> test set |
 |:--:|:--:|:--:|
 | ![height:330px](figures/mnist_softmax_train.png) | ![height:330px](figures/mnist_siamese_train.png) | ![height:330px](figures/mnist_siamese_test.png) |
+ 
+---
 
-Possibe to classify by distance. But cross-entropy performs better on large datasets$^1$
+With cross-entropy 99% accuracy. While the embeddings look (angularly) separable, they don't have good metric properties. They might not be the best choice as a descriptor for new classes.
+
+But with contrastive loss = distance-based, classification is also possible with high accuracy. But usually cross-entropy performs better on large datasets
+
 ###### $^1$ Significance of Softmax-based features in comparison to distance metric learning-based features. Shota Horiguchi, Daiki Ikami, Kiyoharu Aizawa. T-PAMI, Vol. 42, No. 5, 2020.
 
 ---
@@ -131,13 +138,13 @@ Train with 900K corresponding pairs (street view, aerial view) from 8 US cities
 
 <center><img src="figures/overhead_train.png" height="250"></center>
 
----
+###### Note: this and next cited papers may be old but are seminal papers, a landmark in their days.
 
-## Example 2 : localization
+---
 
 <center><img src="figures/overhead_query.png" height="450"></center>
 
-Test with ~70K pairs per city of **3 other cities** $\rightarrow$ recall@1% = 700 images = 0.5, ie, for half of the queries the true match is in the top 1%
+Test with ~70K pairs per city of **3 other, never seen cities** $\rightarrow$ recall@1% = 700 images = 0.5, ie, for half of the queries the true match is in the top 1%
 
 ---
 
@@ -164,7 +171,7 @@ Sketch queries and top 10 answers
 
 ## Example 4 : *Terrapattern*
 
-"Visual serach engine for satellite imagery" = image retrieval by metric learning. 
+"Visual search engine for satellite imagery" = image retrieval by metric learning. 
 CMU project 2016
 
 ![](figures/terrapattern.jpeg)
@@ -181,11 +188,11 @@ https://www.youtube.com/watch?v=AErDoe-5Ol4 play 1:11 to 3:56
 
 # Seminal works
 
-###### J. Bromley, I. Guyon, Y. Lecun et al. Signature Verification using a "Siamese" Time Delay Neural Network. NIPS'<font color="red">94</font> 
+###### J. Bromley, I. Guyon, Y. Lecun et al. Signature Verification using a "Siamese" Time Delay Neural Network. NIPS'<font color="red">94</font> !!
 
-###### S. Chopra, R. Hadsell, Y. LeCun. Learning a similarity metric discriminatively, with application to face verification. CVPR'<font color="red">05</font>
+###### S. Chopra, R. Hadsell, Y. LeCun. Learning a similarity metric discriminatively, with application to face verification. CVPR'<font color="red">05</font> !
 
-###### R. Hadsell, S. Chopra, Y. LeCun. Dimensionality reduction by learning an invariant mapping. CVPR'<font color="red">06</font>
+###### R. Hadsell, S. Chopra, Y. LeCun. Dimensionality reduction by learning an invariant mapping. CVPR'<font color="red">06</font> !
 
 In 2014 several papers at top conferences on descriptors for patch matching, face verification and recognition. On *Labeled Faces in the Wild*, 99.15% accuracy! 
 
@@ -204,9 +211,10 @@ Typical Siamese architecture
 
 Let be
 - $f(x)$ the $d$-dimensional vector produced by the network branch
+- optinally normalized, $||f(x)||_2 = 1$ (lying on a hypersphere)
 - $x_1, x_2$ inputs to branches
-- $y=0$ if $x_1$ is deemed similar to $x_2$ and 1 if not
-- $m$ a margin value, usually 1.0
+- $y$ groundtruth, $y=0$ if $x_1$ is deemed similar to $x_2$ (e.g. same class) and 1 if not
+- $m$ a margin value, usually 1.0 (but why ? how to set it ?)
 
 $$ D = ||f(x_1) - f(x_2)||_2$$
 $$L(x_1, x_2, y) = (1-y) \; D^2 + y\; (\max\, (0, m - D))^2$$
@@ -228,6 +236,7 @@ Meaning:
 
 <center><img src="figures/graphic_contrastive.png" height="600"></center>
 
+
 ---
 
 ## Contrastive loss with double margin
@@ -241,6 +250,8 @@ A **margin** $m_2$ **for similar samples** tells the optimizer not to bother wit
 $$ D = ||f(x_1) - f(x_2)||^2_2$$
 $$L(x_1, x_2, y) = (1-y) \; (\max(0, \, D - m_1))^2 $$
 $$+ \; y\; (\max(0, \, m_2 - D))^2$$
+
+But now we have 2 parameters to set.
 
 ---
 
@@ -332,7 +343,7 @@ In contrastive loss we asked for $x_1, x_2$ to be the closest possible if simila
 Now we want $distance($anchor, negative$)$ to be at least $m + distance($anchor, positive$)$
 
 
-$$d(p,q) = ||p - q||_2 \;\; , \;\;
+$$d(p,q) = ||p - q||_2 \;, \;\; \text{or} \;\;
 d(p,q) = 1 - \displaystyle\frac{p \cdot q}{||p||_2 ||q||_2}$$
 
 <font color="blue"> 
@@ -341,7 +352,7 @@ $$L = \max \{\, 0, m + d(a,p) - d(a,n) \, \}$$
 
 </font>
 
-$$L = \max \{\, 0, \; 1 - \frac{d(a,n)}{m + d(a,p)} \, \}$$
+$$\text{or}\;\; L = \max \{\, 0, \; 1 - \frac{d(a,n)}{m + d(a,p)} \, \}$$
 
 
 ---
@@ -375,6 +386,8 @@ Not the most popular but simple and specially adapted to retrieval and classific
 
 Originally proposed to learn a linear transform, later easily adapted to deep learning.
 
+Revived in Proxy NCA, Proxy NCA++ losses (CPR, ECCV 2020)
+
 ###### $^1$ Neighbourhood components analysis. J. Goldberger, S. Roweis, G. Hinton, R. Salakhutdinov. NIPS'05
 
 ---
@@ -396,19 +409,19 @@ Originally proposed to learn a linear transform, later easily adapted to deep le
 **Goal**: find $w$ such that average classification accuracy for a new (test) data $x$ by $k$-NN is maximized
 
 **Problems**
-- an *infinitesimal* change in $w$ may change the neighbour graph and affect accuracy by a *finite* amount $\rightarrow f$ piece-wise, non-differentiable
+- an *infinitesimal* change in $w$ may change the neighbour graph and affect accuracy by a *finite* amount $\rightarrow \phi(\cdot\, ; w)$ piece-wise, non-differentiable
 - of course, test data are unknown
 
 **Solution**
-- instead of yes/no NN, *probability* of being NN
+- **instead of yes/no NN, *probability* of being a NN**
 - optimize w.r.t training set, as usual
 
 ---
 
 ## NCA loss
 
-- $p_{ij} = \displaystyle\frac{\exp{-||\phi(x_i) - \phi(x_j)||^2}}{\displaystyle\sum_{k\neq j} \exp{-||\phi(x_i) - \phi(x_k)||^2}}$   (softmax of Euclidean distances)
-probability that $x_j$ nearest neighbour of $x_i$, define $p_{ii} = 0$
+- $p_{ij} = \displaystyle\frac{\exp{-||\phi(x_i\,;w) - \phi(x_j\,;w)||^2}}{\displaystyle\sum_{k\neq j} \exp{-||\phi(x_i\,;w) - \phi(x_k\,;w)||^2}}\;\;$   Softmax of Euclidean distances
+probability that $x_j$ is the nearest neighbour of $x_i$ ; we define $p_{ii} = 0$
 - $C_i = \{j \, | \, c_j = c_i \}$ index of samples of same class than $x_i$
 - $p_i = \displaystyle\sum_{j \in C_i} p_{ij}$ 
 probability that nearest neighbour of $x_i$ is of its same class = probability $x_i$ correctly classified by 1-NN
@@ -423,8 +436,8 @@ Cross-entropy is the preferred loss for classification
 
 - batch $(x_i, y_i), \; i=1\ldots m$, $m=$ batch size
 - $x_i$ image
-- $y_i \in [1 \ldots n]$, groundtruth label, with $n=$ number of classes
-- $f(x)$ logits or betwork output before last fully connected layer
+- $y_i \in [1 \ldots n]$ groundtruth label, with $n=$ number of classes
+- $f(x)$ logits, network output before last fully connected layer
 - fc layer is $W^t f(x) + b$
 
 $$
@@ -459,7 +472,7 @@ Need to compute a simmilarity or distance between pairs of images.
 $$
 L = - \displaystyle\frac{1}{m} \displaystyle\sum_{i=1}^m \log \displaystyle\frac{e^{\tilde{W}_{y_i}^t \tilde{f}(x_i)}}{\sum_{j=1}^n e^{\tilde{W}_{y_j}^t \tilde{f}(x_i)}}
 $$
-means to make every $\tilde{f}(x_i)$ close to its $\tilde{W}_{y_i}^t$, that becomes the **"center" or representative** of the class $y_i \in [1\ldots n]$
+means to make every $\tilde{f}(x_i)$ close to its $\tilde{W}_{y_i}^t$, that becomes the **"center" or representative** of the class $y_i$
 
 ---
 
@@ -482,11 +495,11 @@ CosFace: effect of margin $m$ on MNIST. Top $f(x)$, bottom embedding $\tilde{f}(
 
 ![bg height:600px right:50%](figures/close_open_face.png)
 
-Application: face recognition and verification.
+Application: face recognition (who is?) *and verification* (same or not?)
 
-Closed classification : new images of known classes at test time
+Recognition is closed classification : at test time, new images of known persons.
 
-**Open** : **new classes** at test time.
+**Verification is open** : at test time, pairs of images of new persons.
 
 Open is possible becase they have learned an embedding = a similarity measure, a distance to compare things.
 
@@ -569,7 +582,7 @@ class SiameseNet(nn.Module):
         return self.embedding_net(x)
 ```
 
-```embedding_net``` is an object of class ``EmbeddingNetL2`` or ``EmbeddingNet`` or anything with a forwarding method ``get_embedding()`` and a ``forward()`` with two inputs.
+```embedding_net``` is an object of class ``EmbeddingNetL2`` or ``EmbeddingNet`` or anything with a forwarding method ``get_embedding()``.
 
 Making a triplet is also a piece of cake.
 
@@ -614,8 +627,9 @@ class ContrastiveLoss(nn.Module):
     def forward(self, output1, output2, target, size_average=True):
         distances = (output2 - output1).pow(2).sum(1)  # squared distances
         losses = 0.5 * (target.float() * distances +
-                        (1 + -1 * target).float() * F.relu(self.margin 
+                        (1.0 - target).float() * F.relu(self.margin 
                           - (distances + self.eps).sqrt()).pow(2))
+                            # sqrt() of a tiny number may be negative!
 
         return losses.mean() if size_average else losses.sum()
 ```
@@ -657,7 +671,7 @@ For a batch of $n$ pairs we compute $2n$ embeddings but only <font color="blue">
 
 Why not create **pairs of embeddings** ? $\rightarrow$ much more terms at zero cost $=$ without reading new images or compute new embeddings
 
-- pass through the branch a **batch of $n$ images** $x_{k},\, k=1\ldots n$, being $c_{k}$ their classes
+- pass through the network a **batch of $n$ images** $x_{k},\, k=1\ldots n$, being $c_{k}$ their grountruth
 - take the $n$ embeddings $f(x_k)$ and **make all pairs** $\big( f(x_i), f(x_j), y_{ij} \big)$ for $i=1\ldots n, j > i$, with $y_{ij} = 1$ if $c_i \neq c_j$ and 0 else
 - now we have <font color="blue">$n(n-1)/2\;$ total terms</font> to minimize the contrastive loss
 
@@ -698,7 +712,7 @@ class OnlineContrastiveLoss(nn.Module):
 ```python
 def pdist(vectors):
     distance_matrix = -2 * vectors.mm(torch.t(vectors)) 
-                      + vectors.pow(2).sum(dim=1).view(1,-1
+                      + vectors.pow(2).sum(dim=1).view(1,-1)
                       + vectors.pow(2).sum(dim=1).view(-1, 1)
     return distance_matrix
 
@@ -1690,7 +1704,7 @@ Tracking **one arbitrary object** in a video, where the object is identified sol
 
 #### <font color="blue">Results</font>
 
-[videos](https://www.robots.ox.ac.uk/~luca/siamese-fc.html)
+These [videos](https://www.robots.ox.ac.uk/~luca/siamese-fc.html) are "discontinued", but you can get an idea [here](https://www.robots.ox.ac.uk/~qwang/SiamMask/) : tracking + semantic segmentation
 
 ---
 
