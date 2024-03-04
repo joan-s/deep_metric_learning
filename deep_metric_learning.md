@@ -8,7 +8,7 @@ size: 16:9
 Deep Metric Learning
 ===
 
-###### Computer Vision Master, module M5, course 2022-23
+###### Computer Vision Master, module C5, course 2023-24
 
 ###### Joan Serrat
 
@@ -26,6 +26,7 @@ Contents
 1. Embedding visualization
 1. Applications : image retrieval, face verification, re-id, few-shot learning, patch correspondence, tracking
 1. I want to try
+1. Example exam questions
 
 ---
 
@@ -37,8 +38,18 @@ Contents
 
 ---
 
+Horizontal axis: same character, different looks (manga, anime, live...)
+
+Vertical axis: different characters (Akane, Ranma)
+
+The goal of metric learning is to learn a representation (features) such that what "is the same" as something has a representation closer in space to this something than what "is not the same".
+
+This is useful for a number of tasks.
+
+---
+
 ## Metric ##
-Function $f(x,y)$ that defines a distance between a pair of elements in a set. Distance is thus a measure of similarity.
+Function $f(x,y)$ that defines a distance between a pair of elements in a set. Distance is thus a measure of dissimilarity.
 
 Satisfies
 - $f(x,y) \geq 0$
@@ -52,7 +63,7 @@ Example :
 
 ---
 
-Mahalanobis: 2d Gaussian samples with non-diagonal $\Sigma_1=\Sigma_2$, $\mu_1\neq\mu_2$
+Mahalanobis distance: samples of two 2d Gaussian distributions with same non-diagonal $\Sigma_1=\Sigma_2$ and different mean $\mu_1\neq\mu_2$ :  closer to a center $\neq$ more similar
 
 <center><img src="figures/qda.png" height="500"></center>
 <!-- 
@@ -112,7 +123,9 @@ Figures from https://github.com/adambielski/siamese-triplet
 
 CNN ``conv 5x5x32`` $\rightarrow$ ``PReLU`` $\rightarrow$ ``MaxPool 2x2`` $\rightarrow$ ``conv 5x5x64`` $\rightarrow$ ``PReLU`` $\rightarrow$ ``MaxPool 2x2`` $\rightarrow$ ``Linear 256`` $\rightarrow$ ``PReLU`` $\rightarrow$ ``Linear 256`` $\rightarrow$ ``PReLU`` $\rightarrow$ **``Linear 2``** $\rightarrow$ ``PReLU`` $\rightarrow$ ``Linear 10`` $\rightarrow$ ``Softmax``, ``Cross-entropy``
 
-Why **``Linear 2``** ? To *view* how samples are represented in the embedding space
+<br>
+
+Why **``Linear 2``** ? To *view* how samples are *originally* represented in the embedding space, no dimensionality reduction
 
 ---
 
@@ -122,9 +135,14 @@ Why **``Linear 2``** ? To *view* how samples are represented in the embedding sp
  
 ---
 
-With cross-entropy 99% accuracy. While the embeddings look (angularly) separable, they don't have good metric properties. They might not be the best choice as a descriptor for new classes.
+With cross-entropy 
+- classification 99% accuracy
+- the embedding looks *angularly* separable but at the center
+- doesn't have good metric properties, might not be the best choice as a descriptor for new classes
 
-But with contrastive loss = distance-based, classification is also possible with high accuracy. But usually cross-entropy performs better on large datasets
+With contrastive loss
+- distance-based classification is reasonable, possible with high accuracy
+- normally cross-entropy performs better for classification on large datasets$^1$ 
 
 ###### $^1$ Significance of Softmax-based features in comparison to distance metric learning-based features. Shota Horiguchi, Daiki Ikami, Kiyoharu Aizawa. T-PAMI, Vol. 42, No. 5, 2020.
 
@@ -144,7 +162,9 @@ Train with 900K corresponding pairs (street view, aerial view) from 8 US cities
 
 <center><img src="figures/overhead_query.png" height="450"></center>
 
-Test with ~70K pairs per city of **3 other, never seen cities** $\rightarrow$ recall@1% = 700 images = 0.5, ie, for half of the queries the true match is in the top 1%
+Test with ~70K pairs per city of **3 other, never seen cities** 
+Recall@1% (700 images) is 0.5 : **for half of the queries true match is in the top 1%**
+True match and top ranked look pretty similar!
 
 ---
 
@@ -152,7 +172,9 @@ Test with ~70K pairs per city of **3 other, never seen cities** $\rightarrow$ re
 
 ###### Sketch-based 3D Shape Retrieval using Convolutional Neural Networks. Fang Wang, Le Kang, Yi Li. *arXiv*:1504.03504v1.
 
-<center><img src="figures/sketch_to_3d_queries.png" height="450"></center>
+Given a sketch find the corresponding most similar 3d models.
+
+<center><img src="figures/sketch_to_3d_queries.png" height="400"></center>
 
 Try it in this [cool online demo](http://users.cecs.anu.edu.au/~yili/cnnsbsr/)
 
@@ -161,6 +183,8 @@ Try it in this [cool online demo](http://users.cecs.anu.edu.au/~yili/cnnsbsr/)
 
 ---
 
+<!--
+
 Sketch queries and top 10 answers
 
 <center><img src="figures/sketch_to_3d_embedding.png" height="450"></center>
@@ -168,6 +192,8 @@ Sketch queries and top 10 answers
 2$d$ PCA projection of sketches and 3$d$ models in the 64$d$ learned common embeding
 
 ---
+
+-->
 
 ## Example 4 : *Terrapattern*
 
@@ -200,7 +226,7 @@ Since then, variant architectures, new applications, loss functions, mining stra
 
 ---
 
-Typical Siamese architecture
+Typical (naif) Siamese architecture
 ===
 
 <center><img src="figures/siamese.png" height="600"></center>
@@ -211,10 +237,10 @@ Typical Siamese architecture
 
 Let be
 - $f(x)$ the $d$-dimensional vector produced by the network branch
-- optinally normalized, $||f(x)||_2 = 1$ (lying on a hypersphere)
+- optionally normalized, $||f(x)||_2 = 1$ (lying on a hypersphere)
 - $x_1, x_2$ inputs to branches
-- $y$ groundtruth, $y=0$ if $x_1$ is deemed similar to $x_2$ (e.g. same class) and 1 if not
-- $m$ a margin value, usually 1.0 (but why ? how to set it ?)
+- $y$ groundtruth, $y=0$ if $x_1$ is said similar to $x_2$ (e.g. same class) and $y=1$ if not
+- $m$ a margin value, usually $1.0$ (but why ? how to set it ?)
 
 $$ D = ||f(x_1) - f(x_2)||_2$$
 $$L(x_1, x_2, y) = (1-y) \; D^2 + y\; (\max\, (0, m - D))^2$$
@@ -245,7 +271,7 @@ Pure contrastive loss similar instances keep *always* being pulled closer, even 
 
 Classes have always some variability, not realistic to ask samples to project to a single point in the embedding.
 
-A **margin** $m_2$ **for similar samples** tells the optimizer not to bother with samples already very close.
+A **margin** $m_2$ **for similar samples** tells the optimizer not to bother with samples already very close if said similar.
 
 $$ D = ||f(x_1) - f(x_2)||^2_2$$
 $$L(x_1, x_2, y) = (1-y) \; (\max(0, \, D - m_1))^2 $$
@@ -276,33 +302,25 @@ Unlike Euclidean distance, this is bounded $\rightarrow$ minimization of contras
 
 ## Distance based logistic
 
-Convert the **Euclidean distance into a probability** of being similar instances, and then use the standard **cross-entropy** loss (also called log-loss) of classification networks :
+Convert the **Euclidean distance into a probability** of being similar instances, and then use the standard **binary cross-entropy** loss of classification :
 
 $$p(x_1, x_2) = \displaystyle\frac{1+\exp(-m)}{1 + \exp(D(x_1,x_2)-m)}$$
 
+<br>
+
 $$L(x_1, x_2, y) = -\big(\;(1-y) \log p(x_1,x_2) + y \log(1-p(x_1,x_2)) \; \big)$$
+
+<br>
 
 $y=0$ similar, $y=1$ different
 
 ---
 
-## Distance based logistic $p(x_1, x_2)$
+$\hspace{2cm}p(x_1, x_2) \hspace{4cm} L(x_1, x_2, y)$
 
-<center><img src="figures/prob_dbl.png" height="450"></center>
+![height:400](figures/prob_dbl.png) ![height:400](figures/loss_dbl.png)
 
----
-
-## Distance based logistic $L(x_1, x_2, y)$
-
-<center><img src="figures/loss_dbl.png" height="450"></center>
-
----
-
-## Distance based logistic
-
-<center><img src="figures/comparacio_dbl.png" height="450"></center>
-
-###### Localizing and orienting street views using overhead imagery. Nam N. Ho, James Hays. *arXiv*:160800161v2.
+This is the one used in *Localizing and orienting street views using overhead imagery. Nam N. Ho, James Hays. *arXiv*:160800161v2.*
 
 ---
 
@@ -314,7 +332,7 @@ $y=0$ similar, $y=1$ different
 - or none, same layers but **independent weights**
 - or **different architecture** in each branch
 
-See patch matching in Applications.
+See "Patch matching" in section Applications.
 
 ---
 
@@ -324,13 +342,13 @@ Triplet networks
 First proposed in 
 ###### Deep metric learning using triplet network. Elad Hoffer, Nir Ailon. ICLR'15, arXiv:1412:6622v3.
 
-However, the idea of using triplets of samples instead of pairs was already used in *Large-margin nearest neighbours* (LMNN), a pre-deep metric learning method.
+However, the idea of using triplets of samples instead of pairs comes from *Large-margin nearest neighbours* (LMNN), a pre-deep metric learning method.
 
 Since they were proposed, they compete with Siameses. Not clear who's better, depends on the task and the dataset.
 
 ---
 
-## Architecture
+## Architecture : anchor, positive, negative
 
 <center><img src="figures/triplet.png" height="600"></center>
 
@@ -367,8 +385,8 @@ $$\text{or}\;\; L = \max \{\, 0, \; 1 - \frac{d(a,n)}{m + d(a,p)} \, \}$$
 
 - learn to *rank* 3 samples, **more context** $\rightarrow$ intuitively better than Siamese for image retrieval
 - harder to (naif) train : $n$ samples in dataset, $O(n^3)$ **triplets**
-- so **mining** is even more necessary
-- **clusters are not required to collapse** to a single point, similar samples only need to be closer to each other than to any dissimilar
+- so **mining** (see later) is even more necessary
+- **clusters are not required to collapse** to a single point, as in single margin contrastive loss
 
 --- 
 
@@ -400,11 +418,14 @@ Revived in Proxy NCA, Proxy NCA++ losses (CPR, ECCV 2020)
 - $c_1, c_2 \ldots c_n$ groundtruth class labels
 - $\phi(x ; w)$ transform with parameters $w$
 - $x \in \R^D, \; \phi(x_{(1)}) \ldots \phi(x_{(k)})$ the $k$ nearest neighbours of $\phi(x)$
-- $\hat{c} = mode(c_{(1)} \ldots c_{(k)})$, most frequent label
+- $c_{(1)} \ldots c_{(k)}$ the class of these neighbors
+- prediction $f(x;w) = mode(c_{(1)} \ldots c_{(k)})$, most frequent label
+
+<br>
+
+In words: want to find $w$ such that when projecting $x$ with $\phi(\cdot\;;w)$, $k$-NN classification in the new space works well.
 
 ---
-
-## NCA loss
 
 **Goal**: find $w$ such that average classification accuracy for a new (test) data $x$ by $k$-NN is maximized
 
@@ -417,8 +438,6 @@ Revived in Proxy NCA, Proxy NCA++ losses (CPR, ECCV 2020)
 - optimize w.r.t training set, as usual
 
 ---
-
-## NCA loss
 
 - $p_{ij} = \displaystyle\frac{\exp{-||\phi(x_i\,;w) - \phi(x_j\,;w)||^2}}{\displaystyle\sum_{k\neq j} \exp{-||\phi(x_i\,;w) - \phi(x_k\,;w)||^2}}\;\;$   Softmax of Euclidean distances
 probability that $x_j$ is the nearest neighbour of $x_i$ ; we define $p_{ii} = 0$
@@ -437,12 +456,12 @@ Cross-entropy is the preferred loss for classification
 - batch $(x_i, y_i), \; i=1\ldots m$, $m=$ batch size
 - $x_i$ image
 - $y_i \in [1 \ldots n]$ groundtruth label, with $n=$ number of classes
-- $f(x)$ logits, network output before last fully connected layer
+- $f(x)$ features, network output before last fully connected layer
 - fc layer is $W^t f(x) + b$
 
 $$
-L_{xe} = - \displaystyle\frac{1}{m} \displaystyle\sum_{i=1}^m \text{one-hot}(y_i) \;\; \log \; \text{softmax}\;f(x_i) \\
-= - \displaystyle\frac{1}{m} \displaystyle\sum_{i=1}^m \log \displaystyle\frac{e^{W_{y_i}^t f(x_i) + b_{y_i}}}{\sum_{j=1}^n e^{W_{y_j}^t f(x_i) + b_{y_j}}}
+L_{xe} = - \displaystyle\frac{1}{m} \displaystyle\sum_{i=1}^m \text{one-hot}(y_i) \;\; \log \; \text{softmax}\;W^t f(x_i) + b \\
+= - \displaystyle\frac{1}{m} \displaystyle\sum_{\color{red}i=1}^m \log \displaystyle\frac{e^{W_{\color{red}y_i}^t f(x_i) + b_{y_i}}}{\sum_{\color{blue}j=1}^n e^{W_{\color{blue}y_j}^t f(x_i) + b_{y_j}}}
 $$
 
 ![bg right:30% height:350px](figures/fc.png)
@@ -808,15 +827,17 @@ Mining is to filter or select the training samples to keep the most difficult on
 ## How
 
 - look for **hard** $=$ difficult cases and train with them
-- a sample is hard means it breaks the margin constraint and has a high cost
-- in Siamese, pairs  $(p,q)$ similar (e.g. same class) but far away in the embedding space, or the opposite, 
+- a sample is hard means it breaks the margin constraint making loss large
+- in Siamese, pairs  $(p,q)$ similar (e.g. same class) but far away in the embedding space, or the opposite.
 
-$$d(p_a,q_b) < m, a \neq b, \;\; d(p_a,q_b) \gg 0, a=b$$
+
+
+$$p_a, q_b \;\; \text{means} \;\; p \; \text{of class}\;a , \;\; q \; \text{of class}\;b \\
+a \neq b, \;\; d(p_a,q_b) < m \;\; \text{hard negatives}\\ 
+a=b, \;\; d(p_a,q_b) \gg 0 \;\; \;\; \text{hard positives}$$
 
 - in triplets, $\{(a,p,n) \; | \; d(a,n) < d(a,p)+m\}$
-- we can mine 
-    - **hard negatives** $q_{b\neq a}$ given $p_a$, $n$ given $a, p$ and/or 
-    - **hard positives** $q_a$ given $p_a$, $p$ given $a, n$   
+ 
 
 ---
 
@@ -827,13 +848,23 @@ $$d(p_a,q_b) < m, a \neq b, \;\; d(p_a,q_b) \gg 0, a=b$$
 <font color="red">hard negatives</font>
 </center>
 
+---
+
+![bg height:700 right:50%](figures/market_reid.png)
+
+Person re-id
+
+At test time ids not belong to training set. Find id in a "gallery".
+
+<font color="green">hard positives</font>
+<font color="red">hard negatives</font>
 
 ---
 
 ## How to mine
 
-- **offline** hard mining : transform the **whole training set** and look for the hardest pairs / triplets, from time to time
-- **online**, also batch or semi-hard : do this only for the samples of **current batch**
+- **offline** mining : transform the **whole training set** and look for the hardest pairs / triplets, from time to time
+- **online**, also batch or "semi-hard" : do this only for the samples of **current batch**
 - offline is much more costly and can make training go bad as it always samples **too difficult** cases
 - online is much faster and **not so hard**, as only a small subset of the training set is considered each time
 
@@ -843,8 +874,10 @@ $$d(p_a,q_b) < m, a \neq b, \;\; d(p_a,q_b) \gg 0, a=b$$
 
 ###### Deep Metric Learning via Lifted Structured Feature Embedding.  Hyun Oh Song, Yu Xiang, Stefanie Jegelka, Silvio Savarese (Stanford U., MIT). CVPR'16.
 
-Standard contrastive loss for batch of pairs in batch $B$
+Standard contrastive loss for a batch of pairs $B$
 $$J = \displaystyle\sum_{(i,j) \in B} y_{ij}\,d_{i,j}^2 + (1-y_{ij}) \, [m - d_{ij}^2]_+$$
+
+$y_{ij} = 1$ same class, $y_{ij} = 0$ different  class, $[v]_+ = max\{0,v\}$.
 
 Idea: instead of just $|B|$ pairs (positive and negative), consider **all possible pairs and mine hardest negative for each positive pair**
 
@@ -858,7 +891,7 @@ $$J_{ij} = \max \Big(
 \max_{(j,l) \, \in \, N} (m - d_{jl}) \,
 \Big) + d_{ij}$$
 
-<font color="blue">maximize dist to hardest negative wrt $i$ and hardest negative wrt $j$, minimize dist positives $i,j$</font>
+<font color="blue">minimize dist positives $i,j$, maximize dist to hardest negative wrt $i$ and hardest negative wrt $j$</font>
 
 <center>
 <img src="figures/lifted_hard_negatives.png" width="300">
@@ -917,7 +950,7 @@ A batch of size $B$ is made of ***B*** **triplets** $\{\, (a_i,p_i,n_i)\, , i=1\
 
 $$L_{tri} = \displaystyle\sum_{i=1}^B \big[\, m + d(a_i,p_i) - d(a_i,n_i)\,\big]_{+}$$
 
-$B$ triplets $\rightarrow$ $3B$ images but $B$ terms
+$B$ triplets $\rightarrow$ $3B$ images but $B$ loss terms
 
 ---
 
@@ -928,7 +961,9 @@ A batch is made by sampling
 - $P$ ids without replacement 
 - $K$ images per id
 
-with $3B \approx PK$  images. 
+with $PK \approx 3B$  images. 
+
+<font color="blue">for all $PK$ images as anchor, sum $\big[m +$ hardest positive $-$ hardest negative $\big]_+$</font>
 
 If $x^i_j$ means the network output for $j$-th image of $i$-th id ,
 
@@ -937,13 +972,13 @@ L_{BH} = \displaystyle\sum_{i=1}^P \displaystyle\sum_{a=1}^K
 \big[\, m + \max_{p=1 \ldots K} d(x^i_a, x^i_p) \; - \min_{j\neq i \,,\, n=1\ldots K} d(x_a^i, x_n^j) \, \big]_+
 $$
 
-<font color="blue">for all images as anchor, sum $\big[m +$ hardest positive $-$ hardest negative $\big]_+$</font>
-
 $3B$ images $\rightarrow$ $3B$ terms
 
 ---
 
 ##### Batch all loss
+
+<font color="blue">for all $PK$ images as anchor, for all positives, for all negatives, sum $\big[\, m + d(a, p) - d(a, n) \, \big]_+$</font>
 
 $$
 L_{BA} = \displaystyle\sum_{i=1}^P \displaystyle\sum_{a=1}^K \;
@@ -952,7 +987,7 @@ L_{BA} = \displaystyle\sum_{i=1}^P \displaystyle\sum_{a=1}^K \;
 \big[\, m + d(x^i_a, x^i_p) - d(x_a^i, x_n^j) \, \big]_+
 $$
 
-<font color="blue">for all images as anchor, for all positives, for all negatives, sum $\big[\, m + d(a, p) - d(a, n) \, \big]_+$</font>
+
 
 $3B$ images $\rightarrow$ $PK(PK-K)(K-1)=6B^2 - 4B$ terms
 
@@ -1061,13 +1096,13 @@ or tricks to improve accuracy over past works
 
 - **increase the dimension** of the embedding space
 
-- **better data augmentation** strategies, sometimes those reported $\neq$ from coded
+- **better data augmentation** strategies, sometimes those reported $\neq$ coded
 
 - different **optimizers** and **learning rates**
 
 - omission of **key details** with impact on the result (as read in code comments)
 
-- **no confidence intervals** from several runs, only results of best trial
+- **no confidence intervals** from several runs, only results of best trial (cherry picking)
 
 ---
 
@@ -1098,7 +1133,7 @@ or tricks to improve accuracy over past works
     - the more, the better
     - if closest neighbors are those of the same class, it's better
 
-- also report Recall@1 = **Precision@1**
+- also report **Precision@1**
     - how many times the nearest sample is of the same class
 
 ---
@@ -1171,7 +1206,7 @@ $p_{j|i}$ means the probability that $x_i$ would choose $x_j$ as its neighbor if
 1. the value of $\sigma_i$ is the dispersion of neighbors and approximated by
 ![](figures/eq2_t-sne.png)
 
-$^1$ [How exactly UMAP works and why exactly it is better than t-SNE](https://towardsdatascience.com/how-exactly-umap-works-13e3040e1668) by N. Oskolkov
+$^1$ [How exactly UMAP works and why exactly it is better than t-SNE](https://github.com/NikolayOskolkov/HowUMAPWorks/blob/master/HowUMAPWorks.ipynb) Jupyter notebook by N. Oskolkov
 
 ---
 
@@ -1182,18 +1217,41 @@ but this has problems on crowded regions so authors change it by another distrib
 
 4. If the $y_i, \, y_j$ model well the distances of $x_i, \, x_j \; \forall i,j$ in the high-dimensional space then $p_{j|i}$ and $q_{j|i}$ should be *similar*.
  ![](figures/eq4_t-sne.png)
- KL = Kullback-Leibler *divergence* $\neq$ distance, between 2 distributions, not simmetric. But can be minimized iteratively to find the $y_i$'s
+ KL = Kullback-Leibler *divergence* $\neq$ distance, between 2 distributions, not symmetric. 
+ 
+ ---
+ 
+ 5. Now that we have the gradient of KL, we can minimized it iteratively wrt. the $y_i$'s 
+
+ $$y_i^t \longleftarrow  y_i^{t-1} \, \alpha \, \frac{\partial KL}{\partial y_i},\;\; \alpha \;\; \text{learning rate}$$
+
+See also this [t-SNE implementation in plain Numpy](https://nlml.github.io/in-raw-numpy/in-raw-numpy-t-sne/)
 
 
 ---
 
 ## UMAP
 
-t-SNE has been superseded by UMAP. One key difference: t-SNE keeps local structure well but not so much global structure
+t-SNE has been superseded by UMAP. One key difference: t-SNE keeps local structure well but not so much global structure. Complete explanation is out of scope. By the same author, notebook on [global structure preservation of t-SNE vs UMAP](https://github.com/NikolayOskolkov/tSNE_vs_UMAP_GlobalStructure/blob/master/tSNE_vs_UMAP.ipynb)
 
-![height:360](figures/t-sne_problem.png)
+local structure = distance between samples of same cluster
+global structure = distance between clusters of samples
 
-Read the post *How exactly...*. Apparently different, it bears several similarities with it. Complete explanation is out of scope. By the same author, read this post : [How to program UMAP from scratch](https://towardsdatascience.com/how-to-program-umap-from-scratch-e6eff67f55fe)
+![height:360](figures/t-sne_problem.png) t-SNE MNIST
+
+---
+
+<style scoped>
+{
+  font-size: 20px;
+}
+</style>
+
+![width:365](figures/continents1b.png) ![width:365](figures/continents2.png) 
+![width:365](figures/continents3b.png) ![width:365](figures/continents4b.png)
+
+> A very obvious bug of tSNE that we immediately see is that if one follows the line from South America towards Africa, one passes Eurasia that was placed by tSNE for some reason between South America and Africa. In contrast, UMAP correctly places Africa between South America and Eurasia.
+
 
 ---
 
@@ -1443,6 +1501,7 @@ attribute = maker + model + year, "Audi A4L 2009"
 
 ---
 
+<!-- 
 #### <font color="blue">Mehod : modified triplet loss</font>
 
 | <img src="figures/reid4_1a.png" width="400"> | $a \longleftrightarrow p$ | <img src="figures/reid4_1b.png" width="500"> |
@@ -1452,6 +1511,7 @@ attribute = maker + model + year, "Audi A4L 2009"
 How to deal with wrong anchor choices ? For each id, replace their anchors by an *estimation* of the class center.
 
 ---
+-->
 
 #### <font color="blue">Mehod : modified triplet loss</font>
 
@@ -1678,6 +1738,7 @@ Tracking **one arbitrary object** in a video, where the object is identified sol
 - $z$ is exemplar or target, $x$ candidate image (sliding window), of same size
 - $f(z, x)$, returns a high score if $z$ and $x$ depict the same object, low otherwise
 - $f$ is learned from ImageNet Video dataset: 4500 videos of 30 classes of animals and vehicles, +1M annotated frames (bounding box of object)
+- at test time **objects to be tracked are different**: skater, fish...
 
 ---
 
@@ -1737,12 +1798,11 @@ Wrap up
 ===
 
 - Siamese and triplets are useful for **learning semantic similarity descriptors**
-- Metric learning as a number of **applications**
-- **Easy to implement** if you know how to make a classification network
-- Just need to define a **loss** and sample **pairs or triplets**
+- Metric learning has a number of **applications**
+- **Easy to implement**, just need to define a **loss** and sample **pairs or triplets**
 - **Versatile** tool : define your own loss function, architecture, miner ...
 - In practice, **mining matters** to training time and results
-- Active field in deep learning that you should know
+- Another field in deep learning that you should know
 
 ---
 
@@ -1767,6 +1827,7 @@ b) Draw a figure showing cases $(L>0, y=0)$, $(L>0, y=1)$, $(L=0, y=1)$
 
 ---
 
+<!-- 
 Answer
 
 a) Contrastive loss. 
@@ -1782,11 +1843,13 @@ b)
 ![height:600](figures/contrastive.png)
 
 ---
+-->
 
 Q2. Consider again a Siamese network made of two branches with shared weights. For a minibatch of $n$ samples we obtain $n/2$ pairs, being each one either positive or negative ($y=0$ or 1). Each pair is one term of the loss. Is there a way to obtain more pairs from the same minibatch ? How ? Why is it better to do it this way ?
 
 ---
 
+<!-- 
 Answer
 
 Instead of two branches we have just one. Pairs are made in the embedding space :
@@ -1797,11 +1860,13 @@ Instead of two branches we have just one. Pairs are made in the embedding space 
 Each pair is a term of the loss. More terms is better, in principle, to estimate the gradient. This is called *online contrastive loss*.
 
 ---
+-->
 
 Q3. What is a hard positive for a Siamese network with contrastive loss ? And a hard negative ?
 
 ---
 
+<!-- 
 Answer
 
 Hard positive is a pair of representations $(f(x_1), f(x_2))$ which are far way (or farther than other positive pairs) and $x_1, x_2$ belong to the same class or are similar according to the groundtruth.
@@ -1809,6 +1874,7 @@ Hard positive is a pair of representations $(f(x_1), f(x_2))$ which are far way 
 A hard negative is the opposite: $f(x_1), f(x_2)$ are close (or closer than other positive pairs) and $x_1, x_2$ belong to different classes.
 
 ---
+-->
 
 Q4. To train a Siamese network suppose we draw a batch of pairs and denote by $P$ and $N$ the set of similar (positive) and dissimilar (negative) pairs, respectively. Interpret the following loss :
 
@@ -1822,6 +1888,7 @@ $$
 Why do it like this, instead of simply optimize the regular contrastive loss ?
 What are we trying to do in this particular case (meaning of the inner and outer $\max$ terms) ?
 
+<!-- 
 ---
 
 Answer 
@@ -1830,6 +1897,7 @@ We are doing mining. That is, looking for difficult samples to train, because th
 
 The way to do it in this case is to maximize the distance to hardest negative wrt $f(x_i)$ and hardest negative wrt $f(x_j)$ and at the same time minimize distance between positives  $f(x_i), f(x_j)$.
 
+-->
 
 
 
